@@ -1,6 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { User } from './user.entity';
 
 export interface JwtUser {
   userId: number;
@@ -9,23 +12,19 @@ export interface JwtUser {
 
 @Injectable()
 export class AuthService {
-  constructor(private jwtService: JwtService) {}
-
-  private users = [
-    {
-      userId: 1,
-      username: process.env.USER_NAME as string,
-      passwordHash: process.env.PASS_HASH as string,
-    },
-  ];
+  constructor(
+    private jwtService: JwtService,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {}
 
   async validateUser(
     username: string,
     password: string,
   ): Promise<JwtUser | null> {
-    const user = this.users.find((u) => u.username === username);
-    if (user && (await bcrypt.compare(password, user.passwordHash))) {
-      return { userId: user.userId, username: user.username };
+    const user = await this.userRepository.findOne({ where: { username } });
+    if (user && (await bcrypt.compare(password, user.password))) {
+      return { userId: user.id, username: user.username };
     }
     return null;
   }
@@ -38,10 +37,30 @@ export class AuthService {
   }
 
   async createUser(username: string, password: string) {
+    // Validar email
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(username)) {
+      throw new BadRequestException('O username deve ser um email válido.');
+    }
+    // Verificar se já existe
+    const exists = await this.userRepository.findOne({ where: { username } });
+    if (exists) {
+      throw new BadRequestException('Usuário já cadastrado.');
+    }
     const passwordHash = await bcrypt.hash(password, 10);
-    return {
+    const user = this.userRepository.create({
       username,
-      passwordHash,
-    };
+      password: passwordHash,
+    });
+    await this.userRepository.save(user);
+    return { userId: user.id, username: user.username };
+  }
+  async getAllUsers() {
+    const users = await this.userRepository.find();
+    return users.map((u) => ({
+      id: u.id,
+      username: u.username,
+      createdAt: u.createdAt,
+      updatedAt: u.updatedAt,
+    }));
   }
 }

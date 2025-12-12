@@ -54,3 +54,17 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# TypeORM
+/ormconfig.json
+/ormconfig.js
+/ormconfig.ts
+/typeorm.config.js
+/typeorm.config.ts
+
+# database files
+*.sqlite
+*.sqlite3
+/db.sqlite
+/db.sqlite3
+/data.sqlite

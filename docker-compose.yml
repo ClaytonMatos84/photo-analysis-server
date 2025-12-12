@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  photo-analysis-server:
+    build: .
+    container_name: photo-analysis-server
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - .:/usr/src/app
+      - sqlite_data:/usr/src/app/db.sqlite
+    command: npm run start:prod
+
+volumes:
+  sqlite_data:
