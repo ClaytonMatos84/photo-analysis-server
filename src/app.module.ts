@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PhotoAnalysisModule } from './photo-analysis/photo-analysis.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       synchronize: true, // Para dev, depois usar migrations
     }),
     AuthModule,
+    PhotoAnalysisModule,
   ],
   controllers: [AppController],
   providers: [AppService],

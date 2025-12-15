@@ -2,6 +2,44 @@
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
+## Photo analysis client
+
+This project includes a small client to call an external photo analysis service using axios and multipart/form-data.
+
+- Env: set `PHOTO_ANALYSIS_URL` to the service base URL (e.g. `http://localhost:4000`).
+- Endpoint path defaults to `/analyze`.
+
+### Usage
+
+TypeScript example:
+
+```ts
+import { PhotoAnalysisClient } from './src/photo-analysis';
+
+async function run() {
+  const client = new PhotoAnalysisClient({ baseUrl: process.env.PHOTO_ANALYSIS_URL });
+  const result = await client.analyzeImage('./sample.jpg', { source: 'catalog' });
+  console.log(result);
+}
+
+run();
+```
+
+NestJS service:
+
+```ts
+import { Module } from '@nestjs/common';
+import { PhotoAnalysisService } from './src/photo-analysis';
+
+@Module({
+  providers: [PhotoAnalysisService],
+  exports: [PhotoAnalysisService],
+})
+export class PhotoAnalysisModule {}
+```
+
+Then inject `PhotoAnalysisService` where needed and call `analyzeImage(filePath)`.
+
 [circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
