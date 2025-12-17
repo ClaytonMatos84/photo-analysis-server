@@ -44,9 +44,12 @@ import { PhotoAnalysisModule } from './photo-analysis/photo-analysis.module';
     }),
     TypeOrmModule.forRoot({
       type: 'sqlite',
-      database: 'db.sqlite',
+      database:
+        process.env.NODE_ENV !== 'production'
+          ? 'db.sqlite'
+          : process.env.DATABASE_PATH,
       autoLoadEntities: true,
-      synchronize: true, // Para dev, depois usar migrations
+      synchronize: true,
     }),
     AuthModule,
     PhotoAnalysisModule,
