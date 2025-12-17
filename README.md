@@ -82,6 +82,32 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Logging
+
+This service uses structured logging via `nestjs-pino` (Pino).
+
+- Dev output is pretty-printed; prod emits JSON lines.
+- Every HTTP log includes a `requestId` and `service` field.
+- Provide your own correlation with header `x-request-id` (optional).
+
+Usage inside controllers/services:
+
+```ts
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+
+export class MyService {
+  constructor(
+    @InjectPinoLogger(MyService.name) private readonly logger: PinoLogger,
+  ) {}
+
+  doWork() {
+    this.logger.info({ step: 'init' }, 'Starting work');
+  }
+}
+```
+
+HTTP access logs are automatic; see `LoggerModule.forRoot` in [src/app.module.ts](src/app.module.ts) for configuration.
+
 ## Run tests
 
 ```bash
