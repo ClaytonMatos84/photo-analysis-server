@@ -5,6 +5,9 @@ import {
   Request,
   UseGuards,
   Get,
+  HttpCode,
+  HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
@@ -34,6 +37,7 @@ export class AuthController {
   ) {}
 
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   async login(@Body() body: LoginDto) {
     this.logger.info({ username: body.username }, 'Login attempt');
     const user = await this.authService.validateUser(
@@ -42,7 +46,10 @@ export class AuthController {
     );
     if (!user) {
       this.logger.warn({ username: body.username }, 'Invalid login');
-      return { error: 'Usuário ou senha inválidos' };
+      throw new HttpException(
+        { error: 'Usuário ou senha inválidos' },
+        HttpStatus.UNAUTHORIZED,
+      );
     }
     const tokens = this.authService.login(user);
     this.logger.info(
