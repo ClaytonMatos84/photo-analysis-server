@@ -8,6 +8,7 @@ services:
       NODE_ENV: production
       JWT_SECRET: ${JWT_SECRET}
       PHOTO_ANALYSIS_URL: ${PHOTO_ANALYSIS_URL_PROD}
+      CORS_ORIGINS: ${CORS_ORIGINS}
       DATABASE_PATH: /usr/src/app/data/db.sqlite
     volumes:
       - ./app-data:/usr/src/app/data
