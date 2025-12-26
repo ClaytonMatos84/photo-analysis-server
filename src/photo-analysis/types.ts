@@ -42,3 +42,18 @@ export interface PhotoAnalysisOptions {
    */
   timeoutMs?: number;
 }
+
+export interface AnalysisResultResponseDto {
+  description: string;
+  location?: string;
+  style?: string;
+  feeling?: string;
+}
+
+export interface PaginatedAnalysisResultsDto {
+  data: AnalysisResultResponseDto[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
