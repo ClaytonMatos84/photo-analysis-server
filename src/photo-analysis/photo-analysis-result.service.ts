@@ -55,7 +55,7 @@ export class PhotoAnalysisResultService {
   async saveFromAnalysisResponse(
     userId: number,
     response: PhotoAnalysisResponse,
-  ): Promise<PhotoAnalysisResult> {
+  ): Promise<PhotoAnalysisResult | null> {
     const dto: SaveAnalysisResultDto = {
       userId,
       description: response.descricao_cena,
@@ -63,6 +63,14 @@ export class PhotoAnalysisResultService {
       style: response.estilo_foto,
       feeling: response.sentimento_transmitido,
     };
+
+    if (!dto.description) {
+      this.logger.warn(
+        { userId },
+        'Analysis response has no description; skipping save',
+      );
+      return null;
+    }
 
     return this.saveAnalysisResult(dto);
   }
