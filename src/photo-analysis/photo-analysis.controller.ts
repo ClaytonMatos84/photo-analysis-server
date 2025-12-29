@@ -131,6 +131,7 @@ export class PhotoAnalysisController {
 
     return {
       data: paginatedResults.data.map((result) => ({
+        id: result.id,
         description: result.description,
         location: result.location ?? undefined,
         style: result.style ?? undefined,

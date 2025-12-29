@@ -44,6 +44,7 @@ export interface PhotoAnalysisOptions {
 }
 
 export interface AnalysisResultResponseDto {
+  id: number;
   description: string;
   location?: string;
   style?: string;
