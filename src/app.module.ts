@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PhotoAnalysisModule } from './photo-analysis/photo-analysis.module';
+import { UserProfileModule } from './user-profile/user-profile.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { PhotoAnalysisModule } from './photo-analysis/photo-analysis.module';
       synchronize: true,
     }),
     AuthModule,
+    UserProfileModule,
     PhotoAnalysisModule,
   ],
   controllers: [AppController],
