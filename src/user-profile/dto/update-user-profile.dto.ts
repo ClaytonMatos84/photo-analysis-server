@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-import { IsString, IsOptional, IsDateString } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 
 export class UpdateUserProfileDto {
   @IsOptional()
@@ -7,7 +6,7 @@ export class UpdateUserProfileDto {
   name?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsString()
   birthDate?: string;
 
   @IsOptional()
