@@ -44,7 +44,7 @@ import { UserProfileModule } from './user-profile/user-profile.module';
       },
     }),
     TypeOrmModule.forRoot({
-      type: 'sqlite',
+      type: 'better-sqlite3',
       database:
         process.env.NODE_ENV !== 'production'
           ? 'db.sqlite'

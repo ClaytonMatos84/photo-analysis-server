@@ -2,8 +2,8 @@ import axios, { AxiosInstance } from 'axios';
 import FormData from 'form-data';
 import {
   PhotoAnalysisOptions,
-  PhotoAnalysisResponse,
   PhotoAnalysisError,
+  PhotoAnalysisResponseService,
 } from './types';
 import { PinoLogger } from 'nestjs-pino';
 
@@ -66,13 +66,13 @@ export class PhotoAnalysisClient {
    * Analyze an image buffer by sending it as multipart/form-data.
    * @param image Buffer da imagem
    * @param filename Nome do arquivo original
-   * @returns PhotoAnalysisResponse
+   * @returns PhotoAnalysisResponseService
    */
   async analyzeImage(
     image: Buffer,
     filename: string,
     extra?: PhotoAnalysisOptions['extraFormFields'],
-  ): Promise<PhotoAnalysisResponse> {
+  ): Promise<PhotoAnalysisResponseService> {
     const form = new FormData();
     form.append('data', image, { filename });
 
@@ -92,7 +92,7 @@ export class PhotoAnalysisClient {
     );
 
     try {
-      const res = await this.axios.post<PhotoAnalysisResponse>(
+      const res = await this.axios.post<PhotoAnalysisResponseService>(
         this.path,
         form,
         {

@@ -13,6 +13,10 @@ export interface PhotoAnalysisResponse {
   observacoes_adicionais: string;
 }
 
+export interface PhotoAnalysisResponseService {
+  analise: PhotoAnalysisResponse;
+}
+
 export interface PhotoAnalysisError {
   message: string;
   status?: number;

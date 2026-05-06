@@ -18,7 +18,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PhotoAnalysisService } from './photo-analysis.service';
 import { PhotoAnalysisResultService } from './photo-analysis-result.service';
-import { PaginatedAnalysisResultsDto, PhotoAnalysisResponse } from './types';
+import { PaginatedAnalysisResultsDto, PhotoAnalysisResponseService } from './types';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
@@ -39,7 +39,7 @@ export class PhotoAnalysisController {
     @Request() req: { user: { userId: string } },
     @Query('saveResult', new ParseBoolPipe({ optional: true }))
     saveResult = true,
-  ): Promise<PhotoAnalysisResponse> {
+  ): Promise<PhotoAnalysisResponseService> {
     if (!file) {
       this.logger.error('No file uploaded');
       throw new HttpException('Arquivo não enviado', HttpStatus.BAD_REQUEST);
@@ -54,12 +54,23 @@ export class PhotoAnalysisController {
       file.originalname,
     );
 
+    if (!analysisResult || !analysisResult.analise) {
+      this.logger.error(
+        { filename: file.originalname, userId: req.user.userId },
+        'Analysis service returned no result',
+      );
+      throw new HttpException(
+        'Falha na análise da imagem',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
     // Salvar resultado automaticamente se saveResult = true
     if (saveResult) {
       try {
         await this.resultService.saveFromAnalysisResponse(
           parseInt(req.user.userId, 10),
-          analysisResult,
+          analysisResult.analise,
         );
         this.logger.info(
           { userId: req.user.userId },
