@@ -18,7 +18,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PhotoAnalysisService } from './photo-analysis.service';
 import { PhotoAnalysisResultService } from './photo-analysis-result.service';
-import { PaginatedAnalysisResultsDto, PhotoAnalysisResponseService } from './types';
+import { PaginatedAnalysisResultsDto, PhotoAnalysisResponse } from './types';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
@@ -39,7 +39,7 @@ export class PhotoAnalysisController {
     @Request() req: { user: { userId: string } },
     @Query('saveResult', new ParseBoolPipe({ optional: true }))
     saveResult = true,
-  ): Promise<PhotoAnalysisResponseService> {
+  ): Promise<PhotoAnalysisResponse> {
     if (!file) {
       this.logger.error('No file uploaded');
       throw new HttpException('Arquivo não enviado', HttpStatus.BAD_REQUEST);
@@ -84,7 +84,7 @@ export class PhotoAnalysisController {
       }
     }
 
-    return analysisResult;
+    return analysisResult.analise;
   }
 
   @UseGuards(JwtAuthGuard)
