@@ -1,162 +1,97 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Photo Analysis Server
 
-## Photo analysis client
+API em NestJS para autenticação de usuários e execução de análises de mídia com integração a serviço externo.
 
-This project includes a small client to call an external photo analysis service using axios and multipart/form-data.
+## O que este projeto faz
 
-- Env: set `PHOTO_ANALYSIS_URL` to the service base URL (e.g. `http://localhost:4000`).
-- Endpoint path defaults to `/analyze`.
+- Cadastro e login de usuários com JWT.
+- Gestão de perfil de usuário autenticado.
+- Análise de imagens por upload (`photo-analysis`) com persistência de resultados.
+- Análise estratégica de anúncios por URL de imagem (`ad-analysis`) com persistência em 3 entidades (`comparador`, `estrategia`, `melhoria`).
+- Listagem paginada e consulta de resultados por usuário.
 
-### Usage
+## Stack
 
-TypeScript example:
+- Node.js + TypeScript
+- NestJS 11
+- TypeORM + SQLite (`better-sqlite3`)
+- `nestjs-pino` para logs estruturados
+- Axios para integração com serviço externo
 
-```ts
-import { PhotoAnalysisClient } from './src/photo-analysis';
+## Variáveis de ambiente
 
-async function run() {
-  const client = new PhotoAnalysisClient({ baseUrl: process.env.PHOTO_ANALYSIS_URL });
-  const result = await client.analyzeImage('./sample.jpg', { source: 'catalog' });
-  console.log(result);
-}
+- `PORT`: porta HTTP da API (default `3000`)
+- `PHOTO_ANALYSIS_URL`: URL base do serviço externo de análise (obrigatória para `photo-analysis` e `ad-analysis`)
+- `AD_ANALYSIS_TIMEOUT_MS`: timeout da integração de anúncios em ms (default `120000`)
+- `CORS_ORIGINS`: lista de origens separadas por vírgula ou `*`
+- `LOG_LEVEL`: nível de log (`debug`, `info`, etc.)
+- `DATABASE_PATH`: caminho do arquivo SQLite em produção
 
-run();
-```
-
-NestJS service:
-
-```ts
-import { Module } from '@nestjs/common';
-import { PhotoAnalysisService } from './src/photo-analysis';
-
-@Module({
-  providers: [PhotoAnalysisService],
-  exports: [PhotoAnalysisService],
-})
-export class PhotoAnalysisModule {}
-```
-
-Then inject `PhotoAnalysisService` where needed and call `analyzeImage(filePath)`.
-
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## Execução local
 
 ```bash
-$ npm install
+npm install
+npm run start:dev
 ```
 
-## Compile and run the project
+API disponível em `http://localhost:3000`.
+
+## Scripts úteis
 
 ```bash
-# development
-$ npm run start
+# build
+npm run build
 
-# watch mode
-$ npm run start:dev
+# execução
+npm run start
+npm run start:dev
+npm run start:prod
 
-# production mode
-$ npm run start:prod
+# qualidade
+npm run lint
+npm run format
+
+# testes
+npm run test
+npm run test:e2e
+npm run test:cov
 ```
 
-## Logging
+## Módulos e rotas
 
-This service uses structured logging via `nestjs-pino` (Pino).
+- `auth`
+  - `POST /auth/register`
+  - `POST /auth/login`
+  - `POST /auth/profile`
+  - `GET /auth/users`
+- `user-profiles`
+  - `POST /user-profiles`
+  - `PUT /user-profiles`
+  - `GET /user-profiles`
+- `photo-analysis`
+  - `POST /photo-analysis/analyze`
+  - `POST /photo-analysis/results`
+  - `GET /photo-analysis/results`
+  - `GET /photo-analysis/results/:id`
+- `ad-analysis`
+  - `GET /ad-analysis/analyze?image_url=...`
+  - `GET /ad-analysis/results`
+  - `GET /ad-analysis/results/:analysisId`
 
-- Dev output is pretty-printed; prod emits JSON lines.
-- Every HTTP log includes a `requestId` and `service` field.
-- Provide your own correlation with header `x-request-id` (optional).
+## Logs
 
-Usage inside controllers/services:
+- Logs HTTP e de aplicação com `nestjs-pino`.
+- Campos de correlação: `requestId` e `service`.
+- É possível enviar `x-request-id` para rastreabilidade ponta a ponta.
 
-```ts
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+## Documentação adicional
 
-export class MyService {
-  constructor(
-    @InjectPinoLogger(MyService.name) private readonly logger: PinoLogger,
-  ) {}
+- [docs/photo-analysis-results.md](docs/photo-analysis-results.md)
+- [docs/pagination-examples.md](docs/pagination-examples.md)
+- [docs/user-profile-api.md](docs/user-profile-api.md)
+- [docs/ad-analysis-api.md](docs/ad-analysis-api.md)
 
-  doWork() {
-    this.logger.info({ step: 'init' }, 'Starting work');
-  }
-}
-```
+## Observações
 
-HTTP access logs are automatic; see `LoggerModule.forRoot` in [src/app.module.ts](src/app.module.ts) for configuration.
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- O banco SQLite é configurado automaticamente via TypeORM com `synchronize: true`.
+- Todos os endpoints de análise e perfil exigem JWT (exceto endpoints públicos de autenticação).

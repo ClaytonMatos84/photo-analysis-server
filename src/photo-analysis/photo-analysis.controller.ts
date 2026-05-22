@@ -19,7 +19,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { PhotoAnalysisService } from './photo-analysis.service';
 import { PhotoAnalysisResultService } from './photo-analysis-result.service';
 import { PaginatedAnalysisResultsDto, PhotoAnalysisResponse } from './types';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 @Controller('photo-analysis')

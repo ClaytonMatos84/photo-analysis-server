@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PhotoAnalysisModule } from './photo-analysis/photo-analysis.module';
 import { UserProfileModule } from './user-profile/user-profile.module';
+import { AdAnalysisModule } from './ad-analysis/ad-analysis.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { UserProfileModule } from './user-profile/user-profile.module';
     AuthModule,
     UserProfileModule,
     PhotoAnalysisModule,
+    AdAnalysisModule,
   ],
   controllers: [AppController],
   providers: [AppService],
