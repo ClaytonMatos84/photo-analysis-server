@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /usr/src/app
 
@@ -10,7 +10,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine
+FROM node:24-alpine
 
 WORKDIR /usr/src/app
 
@@ -21,4 +21,4 @@ COPY --from=builder /usr/src/app/dist ./dist
 
 EXPOSE 3000
 
-CMD ["node", "dist/main"]
+ENTRYPOINT ["node", "dist/main.js"]

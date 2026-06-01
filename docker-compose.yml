@@ -10,6 +10,9 @@ services:
       PHOTO_ANALYSIS_URL: ${PHOTO_ANALYSIS_URL_PROD}
       CORS_ORIGINS: ${CORS_ORIGINS}
       DATABASE_PATH: /usr/src/app/data/db.sqlite
+      YOUTUBE_FETCH_TIMEOUT_MS: ${YOUTUBE_FETCH_TIMEOUT_MS}
+      YOUTUBE_INSECURE_TLS: ${YOUTUBE_INSECURE_TLS}
+      YOUTUBE_CA_CERT_PATH: ${YOUTUBE_CA_CERT_PATH}
     volumes:
       - ./app-data:/usr/src/app/data
     restart: unless-stopped

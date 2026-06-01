@@ -10,6 +10,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PhotoAnalysisModule } from './photo-analysis/photo-analysis.module';
 import { UserProfileModule } from './user-profile/user-profile.module';
 import { AdAnalysisModule } from './ad-analysis/ad-analysis.module';
+import { YoutubeAnalysisModule } from './youtube-analysis/youtube-analysis.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { AdAnalysisModule } from './ad-analysis/ad-analysis.module';
     UserProfileModule,
     PhotoAnalysisModule,
     AdAnalysisModule,
+    YoutubeAnalysisModule,
   ],
   controllers: [AppController],
   providers: [AppService],
