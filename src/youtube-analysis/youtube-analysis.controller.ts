@@ -1,7 +1,9 @@
 import {
   Controller,
   DefaultValuePipe,
+  Delete,
   Get,
+  HttpCode,
   HttpException,
   HttpStatus,
   Param,
@@ -94,6 +96,20 @@ export class YoutubeAnalysisController {
     }
 
     return result;
+  }
+
+  @Delete('results/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteResultById(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: { user: { userId: string } },
+  ): Promise<void> {
+    const userId = parseInt(req.user.userId, 10);
+    const deleted = await this.youtubeAnalysisResultService.deleteByIdForUser(userId, id);
+
+    if (!deleted) {
+      throw new HttpException('Resultado nao encontrado', HttpStatus.NOT_FOUND);
+    }
   }
 
   private isValidYoutubeUrl(url: string): boolean {

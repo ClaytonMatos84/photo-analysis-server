@@ -46,6 +46,7 @@ export class YoutubeAnalysisService {
     const html = await this.fetchVideoPage(youtubeUrl);
     const initialPlayerResponse = this.extractInitialPlayerResponse(html);
     const summary = this.mapToSummary(initialPlayerResponse);
+    this.validateSummaryOrThrow(summary, youtubeUrl);
 
     return this.resultService.saveSummary({
       userId,
@@ -195,6 +196,34 @@ export class YoutubeAnalysisService {
       category: this.normalizeText(microformat.category),
       ownerProfileUrl: this.normalizeText(microformat.ownerProfileUrl),
     };
+  }
+
+  private validateSummaryOrThrow(
+    summary: Omit<YoutubeAnalysisSummary, 'id' | 'youtubeUrl' | 'createdAt'>,
+    youtubeUrl: string,
+  ): void {
+    const missingAttributes = Object.entries(summary)
+      .filter(([, value]) => value === null || value === undefined)
+      .map(([key]) => key)
+      .sort();
+
+    if (missingAttributes.length === 0) {
+      return;
+    }
+
+    this.logger.error(
+      {
+        youtubeUrl,
+        missingAttributes,
+      },
+      'YouTube analysis summary has missing attributes and will not be saved',
+    );
+
+    throw new UnprocessableEntityException({
+      message:
+        'Nao foi possivel concluir a analise do video. Alguns dados obrigatorios nao foram retornados pelo YouTube.',
+      missingAttributes,
+    });
   }
 
   private normalizeText(value?: string | null): string | null {

@@ -85,6 +85,7 @@ npm run test:cov
   - `GET /youtube-analysis/analyze?url=...`
   - `GET /youtube-analysis/results`
   - `GET /youtube-analysis/results/:id`
+  - `DELETE /youtube-analysis/results/:id`
 
 ## Logs
 

@@ -93,6 +93,14 @@ export class YoutubeAnalysisResultService {
     return this.toSummary(result);
   }
 
+  async deleteByIdForUser(userId: number, id: number): Promise<boolean> {
+    this.logger.info({ userId, id }, 'Deleting YouTube analysis result by id for user');
+
+    const deleteResult = await this.repository.delete({ id, userId });
+
+    return (deleteResult.affected ?? 0) > 0;
+  }
+
   private toSummary(saved: YoutubeAnalysisResult): YoutubeAnalysisSummary {
 
     return {
