@@ -31,8 +31,18 @@ export class YoutubeAnalysisService {
       headers: {
         'user-agent':
           'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-        accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
         'accept-language': 'en-US,en;q=0.9',
+        'accept-encoding': 'gzip, deflate, br',
+        'sec-ch-ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Linux"',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'none',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
       },
     });
   }
@@ -104,13 +114,14 @@ export class YoutubeAnalysisService {
           code?: string;
           response?: { status?: number; data?: unknown };
         };
+        const httpStatus = err?.response?.status;
         const isLastAttempt = attempt === maxAttempts;
 
         this.logger.error(
           {
             youtubeUrl,
             attempt,
-            status: err?.response?.status,
+            status: httpStatus,
             code: err?.code,
             message: err?.message,
             cause: err?.cause,
@@ -120,12 +131,21 @@ export class YoutubeAnalysisService {
         );
 
         if (isLastAttempt) {
+          if (httpStatus === 429) {
+            throw new BadGatewayException(
+              'YouTube esta limitando as requisicoes (429). Tente novamente em alguns minutos.',
+            );
+          }
           throw new BadGatewayException(
             'Falha de comunicacao com YouTube para analise do video.',
           );
         }
 
-        await this.wait(300 * attempt);
+        // Use exponential backoff for 429; short delay for other transient errors
+        const delayMs = httpStatus === 429
+          ? 5000 * Math.pow(2, attempt - 1)
+          : 1000 * attempt;
+        await this.wait(delayMs);
       }
     }
 
@@ -221,7 +241,7 @@ export class YoutubeAnalysisService {
 
     throw new UnprocessableEntityException({
       message:
-        'Nao foi possivel concluir a analise do video. Alguns dados obrigatorios nao foram retornados pelo YouTube.',
+        'Nao foi possível concluir a analise do video. Alguns dados obrigatórios nao foram retornados pelo YouTube.',
       missingAttributes,
     });
   }
