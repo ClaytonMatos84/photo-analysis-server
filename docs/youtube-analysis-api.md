@@ -114,7 +114,93 @@ curl -X GET "http://localhost:3000/youtube-analysis/results?page=1&limit=5" \
 
 ---
 
-### 3. Buscar resultado por ID
+### 3. Listar top vídeos por visualizações
+
+**GET** `/youtube-analysis/top-views?limit=10`
+
+Retorna os vídeos do usuário autenticado ordenados por `viewCount` (decrescente).
+
+**Parâmetros:**
+
+- `limit` (opcional, default `10`, mínimo `1`, máximo `50`)
+
+**Exemplo:**
+
+```bash
+curl -X GET "http://localhost:3000/youtube-analysis/top-views?limit=5" \
+  -H "Authorization: Bearer seu_token_jwt"
+```
+
+**Resposta (200):**
+
+```json
+{
+  "metric": "viewCount",
+  "totalReturned": 2,
+  "videos": [
+    {
+      "id": 42,
+      "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoId": "dQw4w9WgXcQ",
+      "title": "Rick Astley - Never Gonna Give You Up (Official Music Video)",
+      "author": "Rick Astley",
+      "viewCount": 123456789,
+      "likeCount": 987654,
+      "createdAt": "2026-06-01T12:10:01.123Z"
+    },
+    {
+      "id": 40,
+      "youtubeUrl": "https://www.youtube.com/watch?v=abc123",
+      "videoId": "abc123",
+      "title": "Outro video",
+      "author": "Canal X",
+      "viewCount": 500000,
+      "likeCount": 32000,
+      "createdAt": "2026-05-30T09:00:00.000Z"
+    }
+  ]
+}
+```
+
+**Erros comuns:**
+
+- `400 Bad Request`: `Parametro limit deve ser um numero inteiro.`
+- `400 Bad Request`: `Parametro limit deve estar entre 1 e 50.`
+
+---
+
+### 4. Listar top vídeos por likes
+
+**GET** `/youtube-analysis/top-likes?limit=10`
+
+Retorna os vídeos do usuário autenticado ordenados por `likeCount` (decrescente).
+
+**Parâmetros:**
+
+- `limit` (opcional, default `10`, mínimo `1`, máximo `50`)
+
+**Exemplo:**
+
+```bash
+curl -X GET "http://localhost:3000/youtube-analysis/top-likes?limit=5" \
+  -H "Authorization: Bearer seu_token_jwt"
+```
+
+**Resposta (200):**
+
+Mesmo formato do endpoint de top por visualizações, com:
+
+- `metric: "likeCount"`
+- ordenação da lista por `likeCount` decrescente
+
+**Erros comuns:**
+
+- `400 Bad Request`: `Parametro limit deve ser um numero inteiro.`
+- `400 Bad Request`: `Parametro limit deve estar entre 1 e 50.`
+
+---
+
+### 5. Buscar resultado por ID
 
 **GET** `/youtube-analysis/results/:id`
 
@@ -137,7 +223,7 @@ Mesmo formato do endpoint de análise.
 
 ---
 
-### 4. Deletar resultado por ID
+### 6. Deletar resultado por ID
 
 **DELETE** `/youtube-analysis/results/:id`
 

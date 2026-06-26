@@ -48,3 +48,22 @@ export interface PaginatedYoutubeAnalysisResultsDto {
   limit: number;
   totalPages: number;
 }
+
+export type YoutubeRankingMetric = 'viewCount' | 'likeCount';
+
+export interface YoutubeTopVideoSummary {
+  id: number;
+  youtubeUrl: string;
+  videoId: string | null;
+  title: string | null;
+  author: string | null;
+  viewCount: number;
+  likeCount: number;
+  createdAt: Date;
+}
+
+export interface YoutubeTopVideosRankingResponseDto {
+  metric: YoutubeRankingMetric;
+  totalReturned: number;
+  videos: YoutubeTopVideoSummary[];
+}

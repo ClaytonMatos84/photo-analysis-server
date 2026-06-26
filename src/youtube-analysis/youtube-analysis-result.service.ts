@@ -5,7 +5,9 @@ import { Repository } from 'typeorm';
 import { YoutubeAnalysisResult } from './youtube-analysis-result.entity';
 import {
   PaginatedYoutubeAnalysisResultsDto,
+  YoutubeRankingMetric,
   YoutubeAnalysisSummary,
+  YoutubeTopVideoSummary,
 } from './types';
 
 interface SaveYoutubeAnalysisInput {
@@ -33,7 +35,9 @@ export class YoutubeAnalysisResultService {
     private readonly logger: PinoLogger,
   ) {}
 
-  async saveSummary(input: SaveYoutubeAnalysisInput): Promise<YoutubeAnalysisSummary> {
+  async saveSummary(
+    input: SaveYoutubeAnalysisInput,
+  ): Promise<YoutubeAnalysisSummary> {
     this.logger.info(
       {
         userId: input.userId,
@@ -80,7 +84,10 @@ export class YoutubeAnalysisResultService {
     userId: number,
     id: number,
   ): Promise<YoutubeAnalysisSummary | null> {
-    this.logger.info({ userId, id }, 'Finding YouTube analysis result by id for user');
+    this.logger.info(
+      { userId, id },
+      'Finding YouTube analysis result by id for user',
+    );
 
     const result = await this.repository.findOne({
       where: { id, userId },
@@ -94,15 +101,48 @@ export class YoutubeAnalysisResultService {
   }
 
   async deleteByIdForUser(userId: number, id: number): Promise<boolean> {
-    this.logger.info({ userId, id }, 'Deleting YouTube analysis result by id for user');
+    this.logger.info(
+      { userId, id },
+      'Deleting YouTube analysis result by id for user',
+    );
 
     const deleteResult = await this.repository.delete({ id, userId });
 
     return (deleteResult.affected ?? 0) > 0;
   }
 
-  private toSummary(saved: YoutubeAnalysisResult): YoutubeAnalysisSummary {
+  async findTopByUserIdAndMetric(
+    userId: number,
+    metric: YoutubeRankingMetric,
+    limit: number,
+  ): Promise<YoutubeTopVideoSummary[]> {
+    const metricColumnByField: Record<YoutubeRankingMetric, string> = {
+      viewCount: 'view_count',
+      likeCount: 'like_count',
+    };
 
+    const metricColumn = metricColumnByField[metric];
+
+    this.logger.info(
+      { userId, metric, limit },
+      'Finding top YouTube analysis results by metric',
+    );
+
+    const results = await this.repository
+      .createQueryBuilder('result')
+      .where('result.user_id = :userId', { userId })
+      .orderBy(
+        `CAST(COALESCE(NULLIF(result.${metricColumn}, ''), '0') AS INTEGER)`,
+        'DESC',
+      )
+      .addOrderBy('result.created_at', 'DESC')
+      .take(limit)
+      .getMany();
+
+    return results.map((result) => this.toTopVideoSummary(result));
+  }
+
+  private toSummary(saved: YoutubeAnalysisResult): YoutubeAnalysisSummary {
     return {
       id: saved.id,
       youtubeUrl: saved.youtubeUrl,
@@ -119,5 +159,33 @@ export class YoutubeAnalysisResultService {
       ownerProfileUrl: saved.ownerProfileUrl,
       createdAt: saved.createdAt,
     };
+  }
+
+  private toTopVideoSummary(
+    saved: YoutubeAnalysisResult,
+  ): YoutubeTopVideoSummary {
+    return {
+      id: saved.id,
+      youtubeUrl: saved.youtubeUrl,
+      videoId: saved.videoId,
+      title: saved.title,
+      author: saved.author,
+      viewCount: this.toNonNegativeInt(saved.viewCount),
+      likeCount: this.toNonNegativeInt(saved.likeCount),
+      createdAt: saved.createdAt,
+    };
+  }
+
+  private toNonNegativeInt(value: string | null): number {
+    if (!value) {
+      return 0;
+    }
+
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isNaN(parsed) || parsed < 0) {
+      return 0;
+    }
+
+    return parsed;
   }
 }

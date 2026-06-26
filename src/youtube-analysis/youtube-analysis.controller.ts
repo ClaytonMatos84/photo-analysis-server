@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   DefaultValuePipe,
   Delete,
@@ -17,6 +18,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import {
   PaginatedYoutubeAnalysisResultsDto,
   YoutubeAnalysisSummary,
+  YoutubeTopVideosRankingResponseDto,
 } from './types';
 import { YoutubeAnalysisResultService } from './youtube-analysis-result.service';
 import { YoutubeAnalysisService } from './youtube-analysis.service';
@@ -37,12 +39,18 @@ export class YoutubeAnalysisController {
     @Request() req: { user: { userId: string } },
   ): Promise<YoutubeAnalysisSummary> {
     if (!youtubeUrl || youtubeUrl.trim().length === 0) {
-      throw new HttpException('Parametro url e obrigatorio', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Parametro url e obrigatorio',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const normalizedUrl = youtubeUrl.trim();
     if (!this.isValidYoutubeUrl(normalizedUrl)) {
-      throw new HttpException('URL do YouTube invalida', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'URL do YouTube invalida',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const userId = parseInt(req.user.userId, 10);
@@ -80,7 +88,33 @@ export class YoutubeAnalysisController {
       );
     }
 
-    return this.youtubeAnalysisResultService.findByUserIdPaginated(userId, page, limit);
+    return this.youtubeAnalysisResultService.findByUserIdPaginated(
+      userId,
+      page,
+      limit,
+    );
+  }
+
+  @Get('top-views')
+  async getTopByViews(
+    @Request() req: { user: { userId: string } },
+    @Query('limit') limit?: string,
+  ): Promise<YoutubeTopVideosRankingResponseDto> {
+    const userId = parseInt(req.user.userId, 10);
+    const parsedLimit = this.parseOptionalLimit(limit);
+
+    return this.youtubeAnalysisService.getTopVideosByViews(userId, parsedLimit);
+  }
+
+  @Get('top-likes')
+  async getTopByLikes(
+    @Request() req: { user: { userId: string } },
+    @Query('limit') limit?: string,
+  ): Promise<YoutubeTopVideosRankingResponseDto> {
+    const userId = parseInt(req.user.userId, 10);
+    const parsedLimit = this.parseOptionalLimit(limit);
+
+    return this.youtubeAnalysisService.getTopVideosByLikes(userId, parsedLimit);
   }
 
   @Get('results/:id')
@@ -89,7 +123,10 @@ export class YoutubeAnalysisController {
     @Request() req: { user: { userId: string } },
   ): Promise<YoutubeAnalysisSummary> {
     const userId = parseInt(req.user.userId, 10);
-    const result = await this.youtubeAnalysisResultService.findByIdForUser(userId, id);
+    const result = await this.youtubeAnalysisResultService.findByIdForUser(
+      userId,
+      id,
+    );
 
     if (!result) {
       throw new HttpException('Resultado nao encontrado', HttpStatus.NOT_FOUND);
@@ -105,7 +142,10 @@ export class YoutubeAnalysisController {
     @Request() req: { user: { userId: string } },
   ): Promise<void> {
     const userId = parseInt(req.user.userId, 10);
-    const deleted = await this.youtubeAnalysisResultService.deleteByIdForUser(userId, id);
+    const deleted = await this.youtubeAnalysisResultService.deleteByIdForUser(
+      userId,
+      id,
+    );
 
     if (!deleted) {
       throw new HttpException('Resultado nao encontrado', HttpStatus.NOT_FOUND);
@@ -133,5 +173,20 @@ export class YoutubeAnalysisController {
     } catch {
       return false;
     }
+  }
+
+  private parseOptionalLimit(limit?: string): number | undefined {
+    if (typeof limit !== 'string' || limit.trim().length === 0) {
+      return undefined;
+    }
+
+    const parsed = Number.parseInt(limit, 10);
+    if (Number.isNaN(parsed)) {
+      throw new BadRequestException(
+        'Parametro limit deve ser um numero inteiro.',
+      );
+    }
+
+    return parsed;
   }
 }

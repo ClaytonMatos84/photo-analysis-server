@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   BadGatewayException,
   Injectable,
   UnprocessableEntityException,
@@ -8,12 +9,19 @@ import axios, { AxiosInstance } from 'axios';
 import { Agent as HttpsAgent } from 'node:https';
 import { existsSync, readFileSync } from 'node:fs';
 import {
+  YoutubeRankingMetric,
   YoutubeAnalysisSummary,
   YoutubeInitialPlayerResponse,
   YoutubePlayerMicroformatRenderer,
   YoutubePlayerResponseVideoDetails,
+  YoutubeTopVideoSummary,
+  YoutubeTopVideosRankingResponseDto,
 } from './types';
 import { YoutubeAnalysisResultService } from './youtube-analysis-result.service';
+
+const TOP_VIDEOS_DEFAULT_LIMIT = 10;
+const TOP_VIDEOS_MIN_LIMIT = 1;
+const TOP_VIDEOS_MAX_LIMIT = 50;
 
 @Injectable()
 export class YoutubeAnalysisService {
@@ -35,7 +43,8 @@ export class YoutubeAnalysisService {
           'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
         'accept-language': 'en-US,en;q=0.9',
         'accept-encoding': 'gzip, deflate, br',
-        'sec-ch-ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        'sec-ch-ua':
+          '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
         'sec-ch-ua-mobile': '?0',
         'sec-ch-ua-platform': '"Linux"',
         'sec-fetch-dest': 'document',
@@ -63,6 +72,40 @@ export class YoutubeAnalysisService {
       youtubeUrl,
       ...summary,
     });
+  }
+
+  async getTopVideosByViews(
+    userId: number,
+    limit?: number,
+  ): Promise<YoutubeTopVideosRankingResponseDto> {
+    return this.getTopVideosByMetric(userId, 'viewCount', limit);
+  }
+
+  async getTopVideosByLikes(
+    userId: number,
+    limit?: number,
+  ): Promise<YoutubeTopVideosRankingResponseDto> {
+    return this.getTopVideosByMetric(userId, 'likeCount', limit);
+  }
+
+  private async getTopVideosByMetric(
+    userId: number,
+    metric: YoutubeRankingMetric,
+    limit?: number,
+  ): Promise<YoutubeTopVideosRankingResponseDto> {
+    const validatedLimit = this.normalizeRankingLimit(limit);
+    const results = await this.resultService.findTopByUserIdAndMetric(
+      userId,
+      metric,
+      validatedLimit,
+    );
+    const normalizedVideos = this.normalizeRankingVideos(results);
+
+    return {
+      metric,
+      totalReturned: normalizedVideos.length,
+      videos: normalizedVideos,
+    };
   }
 
   private async fetchVideoPage(youtubeUrl: string): Promise<string> {
@@ -142,9 +185,8 @@ export class YoutubeAnalysisService {
         }
 
         // Use exponential backoff for 429; short delay for other transient errors
-        const delayMs = httpStatus === 429
-          ? 5000 * Math.pow(2, attempt - 1)
-          : 1000 * attempt;
+        const delayMs =
+          httpStatus === 429 ? 5000 * Math.pow(2, attempt - 1) : 1000 * attempt;
         await this.wait(delayMs);
       }
     }
@@ -154,7 +196,9 @@ export class YoutubeAnalysisService {
     );
   }
 
-  private extractInitialPlayerResponse(html: string): YoutubeInitialPlayerResponse {
+  private extractInitialPlayerResponse(
+    html: string,
+  ): YoutubeInitialPlayerResponse {
     const markers = [
       'ytInitialPlayerResponse =',
       'var ytInitialPlayerResponse =',
@@ -195,11 +239,11 @@ export class YoutubeAnalysisService {
     }
   }
 
-  private mapToSummary(response: YoutubeInitialPlayerResponse): Omit<
-    YoutubeAnalysisSummary,
-    'id' | 'youtubeUrl' | 'createdAt'
-  > {
-    const videoDetails: YoutubePlayerResponseVideoDetails = response.videoDetails ?? {};
+  private mapToSummary(
+    response: YoutubeInitialPlayerResponse,
+  ): Omit<YoutubeAnalysisSummary, 'id' | 'youtubeUrl' | 'createdAt'> {
+    const videoDetails: YoutubePlayerResponseVideoDetails =
+      response.videoDetails ?? {};
     const microformat: YoutubePlayerMicroformatRenderer =
       response.microformat?.playerMicroformatRenderer ?? {};
 
@@ -253,6 +297,36 @@ export class YoutubeAnalysisService {
 
     const normalized = value.trim();
     return normalized.length > 0 ? normalized : null;
+  }
+
+  private normalizeRankingLimit(limit?: number): number {
+    if (typeof limit !== 'number') {
+      return TOP_VIDEOS_DEFAULT_LIMIT;
+    }
+
+    if (!Number.isInteger(limit)) {
+      throw new BadRequestException(
+        'Parametro limit deve ser um numero inteiro.',
+      );
+    }
+
+    if (limit < TOP_VIDEOS_MIN_LIMIT || limit > TOP_VIDEOS_MAX_LIMIT) {
+      throw new BadRequestException(
+        `Parametro limit deve estar entre ${TOP_VIDEOS_MIN_LIMIT} e ${TOP_VIDEOS_MAX_LIMIT}.`,
+      );
+    }
+
+    return limit;
+  }
+
+  private normalizeRankingVideos(
+    videos: YoutubeTopVideoSummary[],
+  ): YoutubeTopVideoSummary[] {
+    return videos.map((video) => ({
+      ...video,
+      viewCount: video.viewCount >= 0 ? video.viewCount : 0,
+      likeCount: video.likeCount >= 0 ? video.likeCount : 0,
+    }));
   }
 
   private wait(ms: number): Promise<void> {
@@ -341,13 +415,19 @@ export class YoutubeAnalysisService {
     }
 
     if (!existsSync(certPath)) {
-      this.logger.warn({ certPath }, 'YOUTUBE_CA_CERT_PATH not found; using default TLS store');
+      this.logger.warn(
+        { certPath },
+        'YOUTUBE_CA_CERT_PATH not found; using default TLS store',
+      );
       return undefined;
     }
 
     try {
       const cert = readFileSync(certPath);
-      this.logger.info({ certPath }, 'Using custom CA certificate for YouTube requests');
+      this.logger.info(
+        { certPath },
+        'Using custom CA certificate for YouTube requests',
+      );
       return new HttpsAgent({ ca: cert, rejectUnauthorized: true });
     } catch (error: unknown) {
       this.logger.warn(

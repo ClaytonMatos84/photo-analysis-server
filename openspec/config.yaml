@@ -1,0 +1,41 @@
+schema: spec-driven
+
+context: |
+	Tech stack:
+	- Node.js + TypeScript
+	- NestJS (arquitetura modular)
+	- Docker / Docker Compose
+	- Jest para testes (unitarios e e2e)
+
+	Dominio:
+	- API para analise de fotos e videos com suporte a:
+		- analise de anuncios
+		- analise de fotos
+		- analise de YouTube
+		- perfil de usuario
+
+	Convencoes:
+	- Manter nomes de modulos/servicos/controladores consistentes com a estrutura em src/
+	- Preservar compatibilidade de contrato HTTP (rotas, payloads e codigos de resposta)
+	- Preferir DTOs e entidades ja existentes antes de criar novos tipos
+	- Evitar mudancas amplas fora do escopo da issue
+
+rules:
+	proposal:
+		- Escrever em portugues (pt-BR), objetivo e direto.
+		- Incluir secoes: Contexto, Problema, Objetivos, Nao-objetivos, Escopo, Riscos.
+		- Explicitar impacto em modulos NestJS e contratos de API.
+		- Limite recomendado: 700 palavras.
+
+	design:
+		- Descrever arquitetura alvo com fluxo de dados ponta a ponta.
+		- Incluir decisoes tecnicas, trade-offs e alternativas descartadas.
+		- Definir estrategia de erros, observabilidade e seguranca (auth/guards).
+		- Mapear impacto em arquivos/chaves de codigo e plano de migracao se necessario.
+
+	tasks:
+		- Quebrar em tarefas pequenas, testaveis e em ordem de dependencia.
+		- Cada tarefa deve referenciar modulo/arquivo principal afetado.
+		- Incluir criterio de aceite verificavel por tarefa.
+		- Priorizar tarefas de no maximo 2 horas; dividir quando exceder.
+		- Incluir tarefa explicita para testes e atualizacao de documentacao relevante.
